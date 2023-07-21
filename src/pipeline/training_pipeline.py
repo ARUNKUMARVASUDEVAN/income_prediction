@@ -17,11 +17,12 @@ from src.utils import Model_evaluater
 
 
 
-if __name__ == '__main__':
-    obj = DataIngestion()
-    train_data_path, test_data_path = obj.initiate_data_ingestion()
 
-    # Create an instance of the data_transformation class and perform data transformation
-    data_transformer =DataTransformation()
-    train_arr, test_arr,preprocessor_obj_path = data_transformer.initiate_data_transformation(train_data_path,test_data_path)
     
+if __name__=='__main__':
+    obj=DataIngestion()
+    train_data_path,test_data_path=obj.initiate_data_ingestion()
+    data_transformation = DataTransformation()
+    train_data_input,test_data_input,train_data_target,test_data_target,_=data_transformation.initiate_data_transformation(train_data_path,test_data_path)
+    model_trainer=ModelTrainer()
+    model_trainer.initiate_model_training(train_data_input,test_data_input,train_data_target,test_data_target)

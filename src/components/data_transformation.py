@@ -15,6 +15,21 @@ from src.utils import save_model
 from sklearn.base import BaseEstimator,TransformerMixin
 from imblearn.over_sampling import RandomOverSampler
 
+class Imputer(BaseEstimator,TransformerMixin):
+    def fit(self,df):
+        return self
+    def transform(self,df):
+        df['age']=df['age'].fillna(df['age'].median())
+        df['workclass']=df['workclass'].fillna(df['workclass'].mode()[0])
+        df['marital-status']=df['marital-status'].fillna(df['marital-status'].mode()[0])
+        df['occupation']=df['occupation'].fillna(df['occupation'].mode()[0])
+        df['race']=df['race'].fillna(df['race'].mode()[0])
+        df['relationship']=df['relationship'].fillna(df['relationship'].mode()[0])
+        df['sex']=df['sex'].fillna(df['sex'].mode()[0])
+
+        return df
+
+        
 
 class drop_column(BaseEstimator,TransformerMixin):
     def __init__(self,columns):
@@ -90,8 +105,11 @@ class DataTransformation:
             logging.info("Data transformation initiated")
 
             pipeline=Pipeline([
-                ('drop_columns',drop_column(columns_to_drop)),
                 ('Remove_spaces',remove_spaces(self)),
+                ('drop_columns',drop_column(columns_to_drop)),
+                ('Imputer',Imputer()),
+                               
+                
                 ('One_hot',onehot_encoder(columns=['workclass','marital-status', 'occupation',
                 'relationship', 'race', 'sex', 'country'])),
                 ('FeatureScaling',FeatureScaling(columns=['age','fnlwgt','education-num','capital-gain','capital-loss','hours-per-week']))
@@ -128,11 +146,12 @@ class DataTransformation:
 
             input_column_train_arr=preprocessor_obj.fit_transform(input_column_train_df)
             input_column_test_arr=preprocessor_obj.transform(input_column_test_df)
+            
 
             logging.info("Pipeline Fitting is completed")
 
-            train_arr=np.c_[input_column_train_arr,np.array(target_column_train_df)]
-            test_arr=np.c_[input_column_test_arr,np.array(target_column_test_df)]
+            #train_arr=np.c_[input_column_train_arr,np.array(target_column_train_df)]
+            #test_arr=np.c_[input_column_test_arr,np.array(target_column_test_df)]
 
             save_model(
                 file_path=self.data_transformation_config.preprocessor_ob_file_path,
@@ -142,8 +161,10 @@ class DataTransformation:
             logging.info("Data Transformed")
 
             return(
-                train_arr,
-                test_arr,
+                input_column_train_arr,
+                input_column_test_arr,
+                target_column_train_df,
+                target_column_test_df,
                 self.data_transformation_config.preprocessor_ob_file_path
             )
             

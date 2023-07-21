@@ -62,69 +62,6 @@ def save_model(file_path,obj):
      except Exception as e:
           raise CustomException(e,sys)
      
-class drop_column(BaseEstimator,TransformerMixin):
-    def __init__(self,columns):
-        self.columns=columns
-    def fit(self,data):
-        return self
-    def transform(self,data):
-        for i in self.columns:
-            data.drop(i,axis=1,inplace=True)
-        return data
-
-import pandas as pd
-
-class remove_spaces(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        pass
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X, y=None):
-        data = pd.DataFrame(X)  # Convert ndarray to DataFrame
-        data.columns = data.columns.str.strip()
-        data = data.apply(lambda x: x.str.strip() if x.dtype == 'object' else x)
-        mode = data['workclass'].mode().values[0]
-        mode1 = data['country'].mode().values[0]
-        data['workclass'] = data['workclass'].replace('?', mode)
-        data['country'] = data['country'].replace('?', mode1)
-
-        return data
-
-
-
-    
-import pandas as pd
-
-class onehot_encoder(BaseEstimator, TransformerMixin):
-    def __init__(self, columns):
-        self.columns = columns
-    
-    def fit(self, data):
-        return self
-    
-    def transform(self, data):
-        data_encode = pd.DataFrame(data)  # Convert data to a DataFrame
-        for col in self.columns:
-            enc = OneHotEncoder(drop='first', handle_unknown='ignore', sparse=False)
-            encoded_data = enc.fit_transform(data_encode[[col]])  # Use fit_transform with a DataFrame
-            feature_names = enc.get_feature_names_out([col])
-            data_encode.drop(col, axis=1, inplace=True)
-            data_encode[feature_names] = encoded_data
-        
-        return data_encode
-
-class FeatureScaling(BaseEstimator,TransformerMixin):
-    def __init__(self,columns):
-        self.columns=columns
-    def fit(self,X,y=None):
-        return self
-    def transform(self,X):
-        X_scaled=X.copy()
-        scaler=StandardScaler()
-        X_scaled[self.columns]=scaler.fit_transform(X[self.columns])
-        return X_scaled
     
 def Model_evaluater(X_train,y_train,X_test,y_test,models):
     try:
@@ -138,11 +75,11 @@ def Model_evaluater(X_train,y_train,X_test,y_test,models):
             accuracy=accuracy_score(y_test,y_pred)*100
             confusion=confusion_matrix(y_test,y_pred)
             precision=precision_score(y_test,y_pred,average='weighted')*100
-            #roc=roc_auc_score(y_test,y_pred)*100
+            roc=roc_auc_score(y_test,y_pred)*100
             f1=f1_score(y_test,y_pred)*100
-            report[list(model.keys())[model_name]]=accuracy,confusion,precision,roc,f1
+            report[model_name]=accuracy,confusion,precision,roc,f1
 
-            return report
+        return report
     except Exception as e:
         logging.info('Exception occured during model Training')
         raise CustomException(e,sys)
