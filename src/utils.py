@@ -15,6 +15,7 @@ from src.exception import CustomException
 from src.logger import logging
 import sys
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix,accuracy_score,precision_score,f1_score,roc_auc_score
 
 class Mongo_db_data:
     def __init__(self, db_name, collection_name):
@@ -71,23 +72,31 @@ class drop_column(BaseEstimator,TransformerMixin):
             data.drop(i,axis=1,inplace=True)
         return data
 
-class remove_spaces(BaseEstimator,TransformerMixin):
-    def __init__(self,data):
-        self.data=data
+import pandas as pd
 
-    def fit(self,X,y=None):
+class remove_spaces(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
         return self
-    def transform(self,X,y=None):
-        data=X.copy()
-        data.columns=data.columns.str.strip()
-        data=data.apply(lambda x: x.str.strip() if x.dtype =='object' else x)
-        mode=data['workclass'].mode().values[0]
-        mode1=data['country'].mode().values[0]
-        data['workclass']=data['workclass'].replace('?',mode)
-        data['country']=data['country'].replace('?',mode1)
+
+    def transform(self, X, y=None):
+        data = pd.DataFrame(X)  # Convert ndarray to DataFrame
+        data.columns = data.columns.str.strip()
+        data = data.apply(lambda x: x.str.strip() if x.dtype == 'object' else x)
+        mode = data['workclass'].mode().values[0]
+        mode1 = data['country'].mode().values[0]
+        data['workclass'] = data['workclass'].replace('?', mode)
+        data['country'] = data['country'].replace('?', mode1)
 
         return data
+
+
+
     
+import pandas as pd
+
 class onehot_encoder(BaseEstimator, TransformerMixin):
     def __init__(self, columns):
         self.columns = columns
@@ -96,13 +105,14 @@ class onehot_encoder(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, data):
-        data_encode = data.copy()
+        data_encode = pd.DataFrame(data)  # Convert data to a DataFrame
         for col in self.columns:
-            enc = OneHotEncoder(drop='first', handle_unknown='ignore', sparse_output=False)  # Correct handle_unknown and sparse parameters
-            encoded_data = enc.fit_transform(data[[col]])  # Use fit_transform with a DataFrame
-            feature_names = enc.get_feature_names_out([col])  # Correct method name and pass column name as a list
-            data_encode.drop(col, axis=1, inplace=True)  # Drop the original column
-            data_encode[feature_names] = encoded_data  # Add the one-hot encoded columns
+            enc = OneHotEncoder(drop='first', handle_unknown='ignore', sparse=False)
+            encoded_data = enc.fit_transform(data_encode[[col]])  # Use fit_transform with a DataFrame
+            feature_names = enc.get_feature_names_out([col])
+            data_encode.drop(col, axis=1, inplace=True)
+            data_encode[feature_names] = encoded_data
+        
         return data_encode
 
 class FeatureScaling(BaseEstimator,TransformerMixin):
@@ -115,3 +125,24 @@ class FeatureScaling(BaseEstimator,TransformerMixin):
         scaler=StandardScaler()
         X_scaled[self.columns]=scaler.fit_transform(X[self.columns])
         return X_scaled
+    
+def Model_evaluater(X_train,y_train,X_test,y_test,models):
+    try:
+        report={}
+        
+        for model_name,model in models.items():
+            model.fit(X_train,y_train)
+            y_pred=model.predict(X_test)
+            
+            
+            accuracy=accuracy_score(y_test,y_pred)*100
+            confusion=confusion_matrix(y_test,y_pred)
+            precision=precision_score(y_test,y_pred,average='weighted')*100
+            #roc=roc_auc_score(y_test,y_pred)*100
+            f1=f1_score(y_test,y_pred)*100
+            report[list(model.keys())[model_name]]=accuracy,confusion,precision,roc,f1
+
+            return report
+    except Exception as e:
+        logging.info('Exception occured during model Training')
+        raise CustomException(e,sys)
