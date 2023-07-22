@@ -24,5 +24,6 @@ if __name__=='__main__':
     train_data_path,test_data_path=obj.initiate_data_ingestion()
     data_transformation = DataTransformation()
     train_data_input,test_data_input,train_data_target,test_data_target,_=data_transformation.initiate_data_transformation(train_data_path,test_data_path)
+    print(train_data_input.columns)
     model_trainer=ModelTrainer()
     model_trainer.initiate_model_training(train_data_input,test_data_input,train_data_target,test_data_target)

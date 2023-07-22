@@ -32,7 +32,8 @@ class DataIngestion:
             df = data.fetch()
             df = transform(df)
             df=pd.DataFrame(df)
-            print(df.isnull().sum())
+
+            
             X=df.drop('salary',axis=1)
             y=df['salary']
             
