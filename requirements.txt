@@ -4,7 +4,7 @@ streamlit
 scikit-learn
 matplotlib
 seaborn
-plotly
+
 pymongo
 imblearn
 streamlit
