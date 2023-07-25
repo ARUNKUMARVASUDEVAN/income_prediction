@@ -1,8 +1,10 @@
-FROM python:3.8
-EXPOSE 8000
-ADD requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+FROM python:3.8-slim-buster
 WORKDIR /app
-COPY . ./
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8000", "--server.address=0.0.0.0"]
+COPY . /app
 
+RUN apt update -y && apt install awscli -y
+
+RUN apt-get update && pip install -r requirements.txt
+
+
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

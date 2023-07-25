@@ -1,0 +1,3 @@
+[submodule "income_prediction"]
+	path = income_prediction
+	url = https://github.com/ARUNKUMARVASUDEVAN/income_prediction
